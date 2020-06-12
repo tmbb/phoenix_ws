@@ -1,0 +1,11 @@
+{
+  "name": "phoenix_ws",
+  "version": "2.14.2",
+  "main": "./priv/static/phoenix_ws.js",
+  "repository": {},
+  "files": [
+    "README.md",
+    "package.json",
+    "priv/static/phoenix_ws.js"
+  ]
+}
