@@ -1,8 +1,9 @@
-class PhoenixWS {
+class PhoenixWS extends EventTarget {
   // Build a new PhoenixWS, or "Phoenix Web Socket"
   // Currently we are not very good at handling reconnects and such.
   // There are probably places where we are not very compatible...
   constructor(socket, topic, initialPayload) {
+    super();
     // The "blob" type is probably a better choice for most applications
     this.binaryType = "blob";
     // Find a better way of dealing with "bufferedAmount"
@@ -48,13 +49,15 @@ class PhoenixWS {
       // If we were able to join a channel, the PhoenixWS is open and can receive messages
       // the `readyState` is set to `OPEN`.
       .receive("ok", response => {
-        console.log("Joined successfully", response)
         this.readyState = WebSocket.OPEN;
+        this.dispatchEvent(new Event("open", {}));
+        this.onopen();
       })
       // If we weren't able to join, just call the error handler.
       .receive("error", response => {
         this.readyState = WebSocket.CLOSED;
-        this.onerror(response)
+        this.dispatchEvent(new Event("error", {}));
+        this.onerror(response);
       })
 
     // Now let's handle messages from the server.
@@ -63,7 +66,6 @@ class PhoenixWS {
     // For PhoenixWSs we'll arbitrarily use the "s" event (S from Server).
     channel
       .on("s", (channelMessage) => {
-        console.log(channelMessage);
         // The `WebSocket.onmessage(event)` expects a `MessageEvent` and not a raw map
         // like the one Phoenix sends to the channel.
         // Because we need to be compatible with the `WebSocket.onmessage(event)` method,
@@ -71,6 +73,7 @@ class PhoenixWS {
         let websocketMessageEvent = this._makeMessageEvent(channelMessage);
         // We then call the handler on the `MessageEvent` so that we act
         // as a well-behaved WebSocket
+        this.dispatchEvent(websocketMessageEvent);
         this.onmessage(websocketMessageEvent);
       })
 
@@ -82,7 +85,9 @@ class PhoenixWS {
 
   close(code, reason) {
     // TODO: Replace this with a real implementation
-    console.log("Closed!");
+    let closeEvent = new CloseEvent("close", {});
+    this.dispatchEvent()
+    this.onmessage(closeEvent);
   }
 
   // We have already a way to handle data that comes from the server.

@@ -21,7 +21,8 @@ defmodule PhoenixWS.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix, "~> 1.3"}
+      {:phoenix, "~> 1.3"},
+      {:ex_doc, "~> 0.22", only: :dev, runtime: false}
     ]
   end
 end
