@@ -1,7 +1,7 @@
 defmodule PhoenixWS.Channel do
   # Hardcoded names for client and server-sent events
-  @server_sent_event "s"
-  @client_sent_event "c"
+  @server_sent_event "x"
+  @client_sent_event "x"
   # Hardcoded key for the message in the JSON map
   @data_key "d"
 
@@ -106,11 +106,15 @@ defmodule PhoenixWS.Channel do
       def handle_in(unquote(@client_sent_event), %{unquote(@data_key) => data}, socket) do
         # Will raise na error if the used doesn't provide a `phoenix_ws_in` callback
         case phoenix_ws_in(data, socket) do
-          # If we're going to reply to the client, we must translate the `phoenix_ws` message
-          # into a Phoenix Channel message.
-          {:reply, reply, new_socket} ->
-            new_reply = %{unquote(@data_key) => reply}
-            {:reply, new_reply, new_socket}
+          # Replies sent to the client are sent as "normal messages" instead of Phoenix replies
+          # because websocket replies are not a real thing.
+          # Replies are an abstraction that Phoenix creates on top of channels.
+          # Remember that the client code expects to be working with a dumb websocket.
+          {:reply, {:ok, reply}, new_socket} ->
+            # Maybe we should use push instead of broadcast?
+            PhoenixWS.broadcast!(socket, reply)
+            # Don't send a reply, because replies are not a thing in normal websockets
+            {:noreply, socket}
 
           {:stop, reason, reply, new_socket} ->
             new_reply = %{unquote(@data_key) => reply}
